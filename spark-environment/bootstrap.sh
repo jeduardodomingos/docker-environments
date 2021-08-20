@@ -4,7 +4,7 @@ export COMPLETE_HADOOP_VERSION=3.2.2
 export SCALA_VERSION=2.12.14
 export SCALA_HOME=/opt/scala
 export SPARK_HOME=/opt/spark
-export HADOOP_HOME=/opt/hadoop
+export HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 
 prepare_envitonment() {
     mkdir -p /tmp/
@@ -15,9 +15,6 @@ prepare_envitonment() {
 install_jdk8() {
     echo "Starting JDK 8 installation ..."
     yum install java-1.8.0-openjdk -y
-
-    export JAVA_HOME=$(update-alternatives --display java | grep "link currently points to" | awk 'NR==1{print $5}') | awk -F 'java' '{print $1$2}'
-
     echo "Finishing JDK 8 installation ..."
 }
 
@@ -107,13 +104,15 @@ install_hadoop() {
     echo "Installing perl checksum validator"
     yum install -y perl-Digest-SHA
 
-    FILE_CHECKSUM=$(shasum -a 512 hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz)
-    HOST_CHECKSUM=$(hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz.sha512)
+    shasum -a 512 hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz >> file_check_sum.txt
 
-    if [ $FILE_CHECKSUM -eq $HOST_CHECKSUM ];
+    FILE_CHECKSUM=$(cat file_check_sum.txt)
+    HOST_CHECKSUM=$(cat hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz.sha512)
 
-        echo "Uncopressing hadoop binary sources ..."
-        tar -zxvf hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz
+    if [ "$FILE_CHECKSUM"="$HOST_CHECKSUM" ]; then
+
+        echo "Uncopressing hadoop binary sources ..." 
+        tar xzf hadoop-${COMPLETE_HADOOP_VERSION}.tar.gz
 
         echo "Moving Hadoop Sources to HADOOP_HOME"
         mv "./hadoop-${COMPLETE_HADOOP_VERSION}"/* "${HADOOP_HOME}"/
@@ -129,8 +128,9 @@ setup_path() {
     echo "export SCALA_VERSION=${SCALA_VERSION}" >> ~/.bash_profile
     echo "export SCALA_HOME=${SCALA_HOME}" >> ~/.bash_profile
     echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bash_profile
-    echo "export JAVA_HOME=${JAVA_HOME}" >> ~/.bash_profile
-    echo "export PATH=\$SCALA_HOME/bin/:\$SPARK_HOME/bin/:\$JAVA_HOME/bin/:${PATH}" >> ~/.bash_profile
+    echo 'export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")' >> ~/.bash_profile
+    echo "export HADOOP_HOME=${HADOOP_HOME}" >> ~/.bash_profile
+    echo "export PATH=\$SCALA_HOME/bin/:\$SPARK_HOME/bin/:\$JAVA_HOME/bin/:\$HADOOP_HOME/bin/:${PATH}" >> ~/.bash_profile
 }
 
 prepare_envitonment
@@ -138,4 +138,5 @@ install_jdk8
 install_scala
 install_scala_build_tools
 install_apache_spark
+install_hadoop
 setup_path
