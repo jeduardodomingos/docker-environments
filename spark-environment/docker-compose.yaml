@@ -1,0 +1,5 @@
+version: '3'
+services:
+  spark-standalone:
+    image: juan-domingos-spark-3.1.2
+    platform: linux/x86_64

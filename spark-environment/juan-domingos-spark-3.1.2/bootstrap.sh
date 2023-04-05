@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export SPARK_VERSION=3.1.2
 export HADOOP_VERSION=3.2
 export COMPLETE_HADOOP_VERSION=3.2.2

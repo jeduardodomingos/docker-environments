@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mysql-db:
+    image: mysql
+    platform: linux/x86_64
+    environment:
+      MYSQL_ROOT_PASSWORD: <MY_ROOT_PASSWD>
+      MYSQL_DATABASE: <MY_DATABASE_NAME>
+    ports:
+      - 3306:3306
+
+networks: 
+  default:
+    external:
+      name: database_network
